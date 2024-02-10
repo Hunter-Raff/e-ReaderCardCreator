@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Printing;
+using System.IO;
 using System.Windows.Forms;
 using AC_e_Reader_Card_Creator.References;
 
@@ -9,12 +10,34 @@ namespace AC_e_Reader_Card_Creator
 {
     public partial class Print_Frontend : Form
     {
+        private bool isDarkModeEnabled;
+        private PreferencesManager preferencesManager = new PreferencesManager("e-ReaderCardCreator");
+
         public Print_Frontend()
         {
             InitializeComponent();
             PopulatePrintersComboBox();
+            LoadDarkModePreference();
+            ApplyTheme();
 
             comboBox_DPI.SelectedIndex = 1; // 600 DPI default
+        }
+
+        private void ToggleDarkMode(object sender, EventArgs e)
+        {
+            isDarkModeEnabled = !isDarkModeEnabled;
+            preferencesManager.SaveDarkModePreference(isDarkModeEnabled);
+        }
+
+        private void LoadDarkModePreference()
+        {
+            isDarkModeEnabled = preferencesManager.ReadDarkModePreference();
+        }
+
+        private void ApplyTheme()
+        {
+            BackColor = isDarkModeEnabled ? preferencesManager.DarkModeBackColor : SystemColors.Control;
+            preferencesManager.ApplyThemeToControls(Controls, isDarkModeEnabled);
         }
 
         private void PopulatePrintersComboBox()
@@ -122,7 +145,7 @@ namespace AC_e_Reader_Card_Creator
 
             printDocument.PrintPage += (sender, e) =>
             {
-                Image image = Image.FromFile(Common.BMP_DOTCODE+".bmp");
+                Image image = Image.FromFile(Common.BMP_DOTCODE + ".bmp");
                 Point loc = new(0, 0);
                 e.Graphics.DrawImage(image, loc);
             };

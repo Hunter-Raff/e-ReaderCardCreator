@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -18,6 +18,7 @@ namespace AC_e_Reader_Card_Creator
         private readonly Dictionary<string, int[]> stationeryFontRGB = [];
         private readonly PrivateFontCollection AC_Letter_Font = new();
         private bool isDarkModeEnabled = false;
+        private PreferencesManager preferencesManager = new PreferencesManager("e-ReaderCardCreator");
 
         public eReaderCCC()
         {
@@ -34,6 +35,9 @@ namespace AC_e_Reader_Card_Creator
             comboBox_Stationery.SelectedIndex = 0;
             comboBox_Greeting.SelectedIndex = 5;
             label_Greeting.Text = comboBox_Greeting.Text;
+
+            isDarkModeEnabled = preferencesManager.ReadDarkModePreference();
+            ApplyTheme();
         }
 
         private void LoadDirectories()
@@ -79,11 +83,19 @@ namespace AC_e_Reader_Card_Creator
 
             List<Label> letter_labels =
             [
-                label_Greeting, label_Line1, label_Line2, label_Line3, label_Line4, label_Line5, label_Line6, label_Closing
+                label_Greeting,
+                label_Line1,
+                label_Line2,
+                label_Line3,
+                label_Line4,
+                label_Line5,
+                label_Line6,
+                label_Closing
             ];
             int[] fontColor = stationeryFontRGB[comboBox_Stationery.Text];
             Common.HandleLetterBody(letter_labels, textBox_Body, fontColor);
         }
+
 
         private void LetterBodyKeyPress(object sender, KeyPressEventArgs e)
         {
@@ -98,12 +110,20 @@ namespace AC_e_Reader_Card_Creator
                 }
 
                 List<Label> letter_labels = [
-                    label_Greeting, label_Line1, label_Line2, label_Line3, label_Line4, label_Line5, label_Line6, label_Closing
+                    label_Greeting,
+                    label_Line1,
+                    label_Line2,
+                    label_Line3,
+                    label_Line4,
+                    label_Line5,
+                    label_Line6,
+                    label_Closing
                 ];
                 int[] fontColor = stationeryFontRGB[comboBox_Stationery.Text];
                 Common.HandleLetterBody(letter_labels, textBox_Body, fontColor);
             }
         }
+
 
         private void ItemNameChanged(object sender, EventArgs e)
         {
@@ -258,7 +278,14 @@ namespace AC_e_Reader_Card_Creator
                 }
 
                 List<Label> letter_labels = [
-                    label_Greeting, label_Line1, label_Line2, label_Line3, label_Line4, label_Line5, label_Line6, label_Closing
+                    label_Greeting,
+                    label_Line1,
+                    label_Line2,
+                    label_Line3,
+                    label_Line4,
+                    label_Line5,
+                    label_Line6,
+                    label_Closing
                 ];
                 int[] fontColor = stationeryFontRGB[comboBox_Stationery.Text];
                 foreach (Label letter_line in letter_labels)
@@ -292,7 +319,14 @@ namespace AC_e_Reader_Card_Creator
         {
             List<Label> letter_labels =
             [
-                label_Greeting, label_Line1, label_Line2, label_Line3, label_Line4, label_Line5, label_Line6, label_Closing
+                label_Greeting,
+                label_Line1,
+                label_Line2,
+                label_Line3,
+                label_Line4,
+                label_Line5,
+                label_Line6,
+                label_Closing
             ];
 
             byte[] fontData = Properties.Resources.FOT_Rodin_Pro_M;
@@ -421,7 +455,14 @@ namespace AC_e_Reader_Card_Creator
 
                     Dictionary<string, string> letterData = Decompressed.GetData();
                     List<Label> letter_labels = [
-                    label_Greeting, label_Line1, label_Line2, label_Line3, label_Line4, label_Line5, label_Line6, label_Closing
+                    label_Greeting,
+                        label_Line1,
+                        label_Line2,
+                        label_Line3,
+                        label_Line4,
+                        label_Line5,
+                        label_Line6,
+                        label_Closing
                     ];
 
                     string[] delimiter = ["\r\n"];
@@ -537,62 +578,33 @@ namespace AC_e_Reader_Card_Creator
             MessageBox.Show(Common.CREDIT, "e-Reader Character Card Creator");
         }
 
+
         private void ToggleDarkMode(object sender, EventArgs e)
         {
             isDarkModeEnabled = !isDarkModeEnabled;
+            ApplyTheme();
+            preferencesManager.SaveDarkModePreference(isDarkModeEnabled);
+        }
 
-            BackColor = isDarkModeEnabled ? Color.FromArgb(40, 40, 40) : SystemColors.Control;
+        private void ApplyTheme()
+        {
+            BackColor = isDarkModeEnabled ? preferencesManager.DarkModeBackColor : SystemColors.Control;
+            preferencesManager.ApplyThemeToControls(Controls, isDarkModeEnabled);
+        }
 
-            foreach (Control control in Controls)
-            {
-                if (control is ToolStrip)
-                {
-                    continue;
-                }
+        private void SaveDarkModePreference(bool darkModeEnabled)
+        {
+            preferencesManager.SaveDarkModePreference(darkModeEnabled);
+        }
 
-                if (isDarkModeEnabled)
-                {
-                    control.BackColor = Color.FromArgb(40, 40, 40);
-                    control.ForeColor = Color.FromArgb(255, 255, 255);
+        private bool ReadDarkModePreference()
+        {
+            return preferencesManager.ReadDarkModePreference();
+        }
 
-                    if (control is TextBox textBox)
-                    {
-                        textBox.BorderStyle = BorderStyle.FixedSingle;
-                    }
-                    else if (control is Button button)
-                    {
-                        button.FlatStyle = FlatStyle.Flat;
-                        button.FlatAppearance.BorderColor = Color.FromArgb(255, 255, 255);
-                    }
-                    else if (control is ComboBox comboBox)
-                    {
-                        comboBox.BackColor = SystemColors.Window;
-                        comboBox.ForeColor = SystemColors.ControlText;
-                    }
-                }
-                else
-                {
-                    control.BackColor = SystemColors.Control;
-                    control.ForeColor = SystemColors.ControlText;
+        private void eReaderCCC_Load(object sender, EventArgs e)
+        {
 
-                    if (control is TextBox textBox)
-                    {
-                        textBox.BackColor = Color.White;
-                        textBox.BorderStyle = BorderStyle.Fixed3D;
-                    }
-                    else if (control is Button button)
-                    {
-                        button.BackColor = Color.White;
-                        button.FlatStyle = FlatStyle.Standard;
-                        button.FlatAppearance.BorderColor = Color.White;
-                    }
-                    else if (control is ComboBox comboBox)
-                    {
-                        comboBox.BackColor = SystemColors.Window;
-                        comboBox.ForeColor = SystemColors.ControlText;
-                    }
-                }
-            }
         }
     }
 }
